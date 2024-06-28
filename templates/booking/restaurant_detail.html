@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% load static %}  <!-- This line is necessary to use the 'static' template tag -->
+
+{% block title %}{{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<a href="/booking/restaurants/" class="back-button">
+     &lt; Back
+</a>
+<div class="restaurant-detail">
+    <div class="gallery">
+        <!-- Placeholder for image gallery -->
+        
+        <img src="https://source.unsplash.com/random/800x600/?restaurant" alt="Image of {{ restaurant.name }}">
+        
+    </div>
+    <h2>{{ restaurant.name }}</h2>
+    <div class="restaurant-meta">
+        <span class="location">{{ restaurant.location }}</span>
+        <span class="capacity">Capacity: {{ restaurant.capacity }} guests</span>
+    </div>
+    <div class="rating">
+        {% if average_rating != "No ratings" %}
+        
+        <div class="circle-rating" style="background: conic-gradient(#4CAF50 {{ rating_percentage }}%, #ddd {{ rating_percentage }}%);">
+            <div class="number">{{ average_rating }}</div>
+        </div>
+        <span>({{ review_count }} reviews)</span>
+        {% else %}
+        <span>{{ average_rating }}</span>
+        {% endif %}
+    </div>    
+    <div class="description">
+        <h3>Description</h3>
+        <p>{{ restaurant.description }}</p>
+        <p> plein de blabla</p>
+    </div>
+    <div class="button-container">
+        {% if user.is_authenticated %}
+        
+            <a href="{% url 'book_reservation' restaurant.id %}">
+                <button type="button" id="reserve-button">Réserver</button>
+            </a>
+            <a href="#reviews">
+                <button type="button" id="evaluate-button">Évaluer</button>
+            </a>
+        {% endif %}
+    </div>
+    <div class="map-container">
+        <!-- Set the dimensions for the map container -->
+        <div id="restaurant-map" data-location="{{ coordinates.0 }},{{ coordinates.1 }}"></div>
+    </div>
+    
+    
+    <div class="reviews" id="reviews">
+        <h3>Submit a Review</h3>
+        <form method="post" action="{% url 'restaurant_detail' restaurant.id %}">
+            {% csrf_token %}
+            {{ review_form.as_p }}
+            <button type="submit" name="submit_review">Submit Review</button>
+        </form>        
+
+        <h3>Reviews</h3>
+        {% for review in restaurant.reviews.all %}
+        <div class="review">
+            <p><strong>Review by:</strong> <a href="{% url 'user_profile_public' user_id=review.user.id %}">{{ review.user.username }}</a></p>
+            <p><strong>Rating:</strong> {{ review.rating }}/5</p>
+            <p>{{ review.text }}</p>
+            {% if request.user == review.user %}
+            <a href="{% url 'edit_review' review_id=review.id %}">Edit</a> |
+            <a href="{% url 'delete_review' review_id=review.id %}" onclick="return confirm('Are you sure?')">Delete</a>
+            {% endif %}
+        </div>
+        {% endfor %}        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/restaurant-map.js' %}"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAChHQ_Ui_hfebmjf1K8RsMoXc7XWOAnv0&callback=initMap"></script>
+
+{% endblock %}

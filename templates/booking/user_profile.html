@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<h1>User Profile</h1>
+<p>Welcome, {{ user.username }}!</p>
+
+{% if user.is_manager and user.managed_restaurants.exists %}
+    <p>Managed Restaurants:</p>
+    <ul>
+        {% for restaurant in user.managed_restaurants.all %}
+        <li><a href="{% url 'manage_restaurant' restaurant_id=restaurant.id %}">{{ restaurant.name }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<h2>Your Reservations</h2>
+<ul>
+    {% for reservation in reservations %}
+    <li>
+        {{ reservation.restaurant.name }} on {{ reservation.date }} at {{ reservation.time }}
+        {% if reservation.is_active and reservation.date > today %}
+            <a href="{% url 'cancel_reservation' reservation.id %}" class="cancel-link">Cancel Reservation</a>
+        {% endif %}
+    </li>
+    {% empty %}
+    <p>You have no reservations.</p>
+    {% endfor %}
+</ul>
+
+<h2>Your Reviews</h2>
+<ul>
+    {% for review in reviews %}
+        <li>Review for {{ review.restaurant.name }}: {{ review.text }}</li>
+    {% empty %}
+        <p>You have not posted any reviews.</p>
+    {% endfor %}
+</ul>
+
+
+<h2>Existing Conversations</h2>
+<ul>
+{% for conversation in conversations %}
+    <li><a href="{% url 'view_chat' conversation_id=conversation.id %}">Conversation #{{ conversation.id }}</a></li>
+{% empty %}
+    <p>No conversations yet.</p>
+{% endfor %}
+</ul>
+
+<!-- Form to start a new conversation -->
+<h2>Start a New Conversation</h2>
+<form method="post" action="{% url 'start_chat_by_username' %}">
+    {% csrf_token %}
+    <label for="username">Enter Username:</label>
+    <input type="text" id="username" name="username" required>
+    <button type="submit">Start Chat</button>
+</form>
+
+{% block extra_js %}
+<script src="{% static 'js/cancel-reservation.js' %}"></script>
+{% endblock %}
+
+{% endblock %}
